@@ -30,9 +30,13 @@ Sample Usage
 As an example, this would send 100 e-mails with random content in them
 with 10 e-mails sent per connection:
 
+  ```
   ./MassMailer.py -s smtp.gmail.com -u example@gmail.com \
-      --to friendlyneighbor@gmail.com -q 100 -n 10 -z
+      --to friendlyneighbor@gmail.com -q 100 -n 10 -z```
+  ```
 
 This would send the same thing, but with all options in a config file:
 
+  ```
   ./MassMailer.py --config MassMailer.conf
+  ```
