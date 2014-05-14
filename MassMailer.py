@@ -12,7 +12,10 @@ from string import printable
 import sys
 import time
 
-import mailer
+try:
+  import mailer
+except ImportError:
+  sys.exit('Install the mailer library: pip install mailer')
 
 def is_float_str(s):
     try:
