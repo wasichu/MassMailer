@@ -377,9 +377,8 @@ class MassMailer(object):
           
           if self.misc_rand_content:
             for n in range(num):
-              rws = rand_words(words)
-              rws[0] = rws[0].capitalize()
-              msgs[n].Body += ' '.join(rws) + '.'
+              rws = ' '.join(rand_words(words))
+              msgs[n].Body += rws.capitalize() + '.'
 
           # Send them all at once if at_a_time is None
           # or at_a_time is greater than quantity
