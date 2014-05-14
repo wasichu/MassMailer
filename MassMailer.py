@@ -33,12 +33,16 @@ def is_list_str(s):
     return type(l) == list
   except:
     return False
+
 def rand_string(alphabet=printable, len_min=1, len_max=6):
   length = random.randint(len_min, len_max)
   s = ''
   for n in range(length):
     s += random.choice(alphabet)
   return s
+
+def rand_words(words, num_words=4):
+  return [random.choice(words) for n in range(num_words)]
 
 class MassMailer(object):
   # Seed PRNG at class creation
@@ -367,12 +371,15 @@ class MassMailer(object):
         try:
           # Get the messages ready
           msgs = []
+          words = [word.strip() for word in open('cracklib-small')]
           for n in range(num):
             msgs.append(self.getMessage())
           
           if self.misc_rand_content:
             for n in range(num):
-              msgs[n].Body += rand_string()
+              rws = rand_words(words)
+              rws[0] = rws[0].capitalize()
+              msgs[n].Body += ' '.join(rws) + '.'
 
           # Send them all at once if at_a_time is None
           # or at_a_time is greater than quantity
@@ -408,7 +415,7 @@ class MassMailer(object):
           time.sleep(error_delay**num_errors)
             
 if __name__ == '__main__':
-    mm = MassMailer()
+    mm = MassMailer('')
     mm.send()
 
     save = raw_input('Do you want to save ' + \
