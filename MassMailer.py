@@ -22,11 +22,12 @@ def is_float_str(s):
         return False
       
 def is_list_str(s):
-  try:
-    list(s)
-    return True
-  except:
-    pass
+  if '[' in s and ']' in s:
+    try:
+      list(s)
+      return True
+    except:
+      pass
 
   try:
     l = json.loads(s)
@@ -414,7 +415,7 @@ class MassMailer(object):
           time.sleep(error_delay**num_errors)
             
 if __name__ == '__main__':
-    mm = MassMailer('')
+    mm = MassMailer()
     mm.send()
 
     save = raw_input('Do you want to save ' + \
