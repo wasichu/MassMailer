@@ -49,7 +49,7 @@ class MassMailer(object):
   # Seed PRNG at class creation
   random.seed()
 
-  def __init__(self, config_file='MassMailer.conf'):
+  def __init__(self):
     '''
     MassMailer constructor.
     
@@ -58,10 +58,16 @@ class MassMailer(object):
     Defaults to a .conf file named after this class
     in the same directory as this module.
     '''
+    # Parse command line args
+    self.parseArgs()
+
+    # Then open the config file
+    self.parseArgs()
+
     # If necessary, open the config file
-    if os.path.isfile(config_file):
+    if self.config and os.path.isfile(self.config):
         self.cp = cp()
-        self.cp.read(config_file)
+        self.cp.read(self.config)
     
         # Parse the config file
         self.parseConfig()
@@ -91,7 +97,9 @@ class MassMailer(object):
         elif v and is_list_str(v):
             v = list(v)
         
-        setattr(self, '_'.join((section, opt)), v)
+        # If no command line argument, then use config 
+        if not getattr(self, '_'.join(section, opt)):
+          setattr(self, '_'.join((section, opt)), v)
 
   def saveConfigFile(self, cf='MassMailer.conf', pw=False):
     '''
@@ -146,12 +154,16 @@ class MassMailer(object):
       self.cp = ap.ArgumentParser( 
           formatter_class=ap.ArgumentDefaultsHelpFormatter)
       
+      # Config file
+      self.cp.add_argument( '--config'
+                          , help='Path to config file'
+                          )
+
       # SMTP options
       self.cp.add_argument( '-s'
                           , '--server'
                           , help='SMTP server\'s hostname'
                           , dest='smtp_server'
-                          , required=True
                           )
       self.cp.add_argument( '-p'
                           , '--port'
@@ -164,12 +176,11 @@ class MassMailer(object):
                           , '--username'
                           , help='SMTP username'
                           , dest='smtp_username'
-                          , required=True
                           )
       self.cp.add_argument( '-w'
                           , '--password'
-                          , help='SMTP password'
                           , dest='smtp_password'
+                          , help='SMTP password'
                           )
       self.cp.add_argument( '-t'
                           , '--tls'
@@ -185,7 +196,6 @@ class MassMailer(object):
                           , nargs='+'
                           , help='Email addresses to send to'
                           , dest='message_to'
-                          , required=True
                           )
       self.cp.add_argument( '-c'
                           , '--cc'
@@ -308,7 +318,7 @@ class MassMailer(object):
     if not getattr(self, name):
       section = name.split('_')[0]
       value = ' '.join(name.split('_')[1:])
-      prompt = '{} {}> '.format(section.upper(), value.upper())
+      prompt = '{} {}> '.format(section.upper(), value.title())
 
       if silent:
         info = gp(prompt)
@@ -341,7 +351,7 @@ class MassMailer(object):
     Creater a mailer.Mailer object and return it
     to the caller.
     '''
-    host = self.smtp_server
+    host = self.getInfoPrompt('smtp_server')
     port = self.smtp_port
     tls = self.smtp_tls
     usr = self.getInfoPrompt('smtp_username')
@@ -384,7 +394,8 @@ class MassMailer(object):
           # Send them all at once if at_a_time is None
           # or at_a_time is greater than quantity
           if not at_a_time or at_a_time > num:
-            print '[+] Sending {} messages'.format(num)
+            print '[+] Sending {} message{}'.format(num,
+                                      's' if num > 1 else '')
             mail.send(msgs)
 
           else:
