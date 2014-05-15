@@ -421,7 +421,7 @@ class MassMailer(object):
       delay = 0.33
       num = self.message_quantity
       width = len(str(num))
-      at_a_time = self.misc_at_a_time
+      at_a_time = abs(self.misc_at_a_time)
 
       mail = self.getMailer()
 
