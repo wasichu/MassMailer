@@ -65,9 +65,6 @@ class MassMailer(object):
     # Parse command line args
     self.parseArgs()
 
-    # Then open the config file
-    self.parseArgs()
-
     # If necessary, open the config file
     if self.config and os.path.isfile(self.config):
         self.cp = cp()
@@ -75,11 +72,6 @@ class MassMailer(object):
     
         # Parse the config file
         self.parseConfig()
-    
-    # Otherwise, read in defaults from the
-    # command line
-    else:
-        self.parseArgs()
     
   def parseConfig(self):
     '''
