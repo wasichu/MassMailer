@@ -11,6 +11,7 @@ import random
 from string import printable 
 import sys
 import time
+import urllib2
 
 try:
   import mailer
@@ -92,16 +93,19 @@ class MassMailer(object):
       for opt in self.cp.options(section):
         v = self.cp.get(section, opt)
         if v.lower() == 'yes' or v.lower() == 'no':
-            v = True if v.lower() == 'yes' else False
+          v = True if v.lower() == 'yes' else False
+        elif v.lower() == 'true' or v.lower() == 'false':
+          v = True if v.lower() == 'true' else False    
         elif v and all(map(str.isdigit, v)):
-            v = int(v)
+          v = int(v)
         elif v and is_float_str(v):
-            v = float(v)
+          v = float(v)
         elif v and is_list_str(v):
-            v = list(v)
+          v = list(v)
+          print 'list: v'
         
         # If no command line argument, then use config 
-        if not getattr(self, '_'.join(section, opt)):
+        if not getattr(self, '_'.join((section, opt))):
           setattr(self, '_'.join((section, opt)), v)
 
   def saveConfigFile(self, cf='MassMailer.conf', pw=False):
@@ -268,6 +272,18 @@ class MassMailer(object):
                           , dest='misc_rand_content'
                           , help='Whether to add random content to each message'
                           )
+      self.cp.add_argument( '--bible-quote'
+                          , action='store_true'
+                          , default=False
+                          , dest='misc_bible_quote'
+                          , help='Include random bible quote in each message'
+                          )
+      self.cp.add_argument( '--fortune'
+                          , action='store_true'
+                          , default=False
+                          , dest='misc_fortune'
+                          , help='Include random UNIX fortune in each message'
+                          )
                           
       return self.cp.parse_args()
 
@@ -336,13 +352,45 @@ class MassMailer(object):
     '''
     Save and return the message body.
     '''
+    # Get the base of the message body
+    if not self.message_body:
+      self.getBodyBase()
+
+    # Start with a base for the body
+    body = self.message_body
+
+    # Check if we need random content
+    if self.misc_rand_content:
+      body += '\n' + ' '.join(rand_words())
+
+    if self.misc_bible_quote:
+      bible_url = 'http://labs.bible.org/api/?passage=random'
+      bible_url += '&formatting=plain'
+      response = urllib2.urlopen(bible_url)
+      bible_quote = response.read()
+      body += '\n' + bible_quote 
+
+    if self.misc_fortune:
+      fortune_url = 'http://www.iheartquotes.com/api/v1/random'
+      response = urllib2.urlopen(fortune_url)
+      fortune = response.read()
+      body += '\n' + fortune
+
+    return body
+
+  def getBodyBase(self):
+    '''
+    Save and return the basic message body
+    which will be included on the command
+    line or typed on stdin.
+    '''
     # See if a body was specified previously
     if self.message_body:
       if os.path.isfile(self.message_body):
         return open(self.message_body).read()
       else:
         return self.message_body
-
+    
     # Otherwise, read from stdin until EOF
     print 'Enter message body (Ctrl+D when done)> ' 
     body = sys.stdin.readlines()
@@ -433,7 +481,7 @@ if __name__ == '__main__':
     mm.send()
 
     save = raw_input('Do you want to save ' + \
-                     'your data to a config file? (y/n) ')
+                     'your options to a config file? (y/n) ')
     if save.lower() == 'y':
       save_fn = raw_input('Enter desired config file name> ')
       save_pw = raw_input('Save password, too? (y/n) ')

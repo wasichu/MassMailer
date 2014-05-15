@@ -39,3 +39,9 @@ at_a_time:
 # be pulled from an English dictionary and 
 # concatenated together into a "sentence."
 rand_content: no 
+
+# Whether to include a random bible quote in each message
+bible_quote: no
+
+# Whether to include a random UNIX fortune in each message
+fortune: no
