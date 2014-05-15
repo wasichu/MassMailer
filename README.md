@@ -15,8 +15,8 @@ How To Use
 ==========
 
 MassMailer can read in the required information for sending mail
-from a config file (MassMailer.conf is an example containing all
-required fields) or from the command line (run ./MassMailer.py -h
+from a config file (MassMailer.conf.sample is an example containing 
+all required fields) or from the command line (run ./MassMailer.py -h
 to see the command line options available).
 
 All command line arguments override their value in the config file.
