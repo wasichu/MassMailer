@@ -280,6 +280,12 @@ class MassMailer(object):
                           , dest='misc_fortune'
                           , help='Include random UNIX fortune in each message'
                           )
+      self.cp.add_argument( '--chuck-norris'
+                          , action='store_true'
+                          , default=False
+                          , dest='misc_chuck_norris'
+                          , help='Include random Chuck Norris joke in each message'
+                          )
                           
       return self.cp.parse_args()
 
@@ -371,6 +377,12 @@ class MassMailer(object):
       response = urllib2.urlopen(fortune_url)
       fortune = response.read()
       body += '\n' + fortune
+
+    if self.misc_chuck_norris:
+      norris_url = 'http://api.icndb.com/jokes/random'
+      response = urllib2.urlopen(norris_url)
+      norris = json.loads(response.read())['value']['joke']
+      body += '\n' + norris
 
     return body
 
