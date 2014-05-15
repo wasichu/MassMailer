@@ -65,7 +65,7 @@ class MassMailer(object):
     # Parse command line args
     self.parseArgs()
 
-    # If necessary, open the config file
+    # If necessary, parse the config file
     if self.config and os.path.isfile(self.config):
         self.cp = cp()
         self.cp.read(self.config)
@@ -115,9 +115,12 @@ class MassMailer(object):
           section = member.split('_')[0]
           name = member[member.find('_')+1:]
           val = getattr(self, member)
+
+          # Don't want the string "None" saved
           if val is None:
             val = ''
 
+          # Special handling of the password
           if name == 'password':
             if not pw:
               val = ''
@@ -126,6 +129,7 @@ class MassMailer(object):
           if section not in self.cp.sections():
             self.cp.add_section(section)
           self.cp.set(section, name, str(val))
+
       # Write to the file
       self.cp.write(cpf)
      
