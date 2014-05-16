@@ -393,7 +393,7 @@ class MassMailer(object):
     line or typed on stdin.
     '''
     # See if a body was specified previously
-    if self.message_body:
+    if self.message_body is not None:
       if os.path.isfile(self.message_body):
         return open(self.message_body).read()
       else:
@@ -427,9 +427,6 @@ class MassMailer(object):
       Send the specified quantity of e-mail messages
       '''
       # Get all required variables ready to rock
-      num_errors = 0
-      max_errors = 6 
-      error_delay = 2.0 
       delay = 0.33
       num = self.message_quantity
       width = len(str(num))
@@ -476,14 +473,6 @@ class MassMailer(object):
           # Then see if too many have occurred
           # Otherwise, wait error_delay**num_errors secs
           sys.stderr.write('[Error]: {}\n'.format(sys.exc_info()[0]))
-
-          num_errors += 1
-          if num_errors > max_errors:
-            sys.exit('Too many errors from the SMTP server')
-          
-          sys.stderr.write('[Sleep]: For {} secs'.format(\
-                                    error_delay**num_errors))
-          time.sleep(error_delay**num_errors)
             
 if __name__ == '__main__':
     mm = MassMailer()
