@@ -2,7 +2,8 @@ MassMailer
 ==========
 
 Mass Mailer in Python.  This script allows you to send a specified
-quantity of the same e-mail in an automated fashion.
+quantity of the same e-mail in an automated fashion.  A number of 
+options are supported.
 
 Dependencies
 ============
