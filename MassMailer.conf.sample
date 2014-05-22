@@ -29,6 +29,11 @@ quantity: 1
 
 [misc]
 
+# Whether to prompt the user at the end of
+# execution to save the command line options
+# to a config file
+quiet: no
+
 # Number of messages to send at a time
 # If it's blank or 0, that means send
 # the entire quantity in a single connection

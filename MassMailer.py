@@ -279,6 +279,13 @@ class MassMailer(object):
                           , help='Number of message copies to send'
                           )
 
+      # Misc Options
+      self.cp.add_argument( '-x'
+                          , '--quiet'
+                          , action='store_true'
+                          , dest='misc_quiet'
+                          , help='Turns off prompt to save options'
+                          )
       self.cp.add_argument( '-n'
                           , '--at-a-time'
                           , type=int
@@ -312,8 +319,8 @@ class MassMailer(object):
                           )
       self.cp.add_argument( '--text'
                           , dest='misc_text_location'
-                          , help='Filename or URL of text to send.' + \
-                                 '\nNo other message content will be ' + \
+                          , help='Filename or URL of text to send.\n' + \
+                                 'No other message content will be\n' + \
                                  'sent if this option is included.'
                           )
       self.cp.add_argument( '--chars-per-msg'
@@ -321,7 +328,7 @@ class MassMailer(object):
                           , type=int
                           , default=160
                           , help='Only used in conjunction with --text.\n' + \
-                                 'Specifies the number of characters per ' + \
+                                 'Specifies the number of characters per\n' + \
                                  'message to send from the text.'
                           )
       self.cp.add_argument( '--send-all-text'
@@ -538,10 +545,11 @@ if __name__ == '__main__':
     mm = MassMailer()
     mm.send()
 
-    save = raw_input('Do you want to save ' + \
-                     'your options to a config file? (y/n) ')
-    if save.lower() == 'y':
-      save_fn = raw_input('Enter desired config file name> ')
-      save_pw = raw_input('Save password, too? (y/n) ')
-      save_pw = True if save_pw.lower() == 'y' else False
-      mm.saveConfigFile(save_fn, save_pw)   
+    if not mm.misc_quiet:
+      save = raw_input('Do you want to save ' + \
+                       'your options to a config file? (y/n) ')
+      if save.lower() == 'y':
+        save_fn = raw_input('Enter desired config file name> ')
+        save_pw = raw_input('Save password, too? (y/n) ')
+        save_pw = True if save_pw.lower() == 'y' else False
+        mm.saveConfigFile(save_fn, save_pw)   
