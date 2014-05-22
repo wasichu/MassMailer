@@ -11,12 +11,16 @@ import random
 from string import printable 
 import sys
 import time
+import traceback
 import urllib2
 
-try:
-  import mailer
-except ImportError:
-  sys.exit('Install the mailer library: pip install mailer')
+# External library imports
+for ext_lib in ('mailer', 'requests'):
+  try:
+    exec 'import {}'.format(ext_lib)
+  except ImportError:
+    sys.exit('Install the {lib} library: pip install {lib}'.\
+        format(lib=ext_lib))
 
 def is_float_str(s):
     try:
@@ -38,6 +42,26 @@ def is_list_str(s):
     return type(l) == list
   except:
     return False
+
+def text_gen(text_loc, num_chars):
+  '''
+  Generator yielding num_chars at a time
+  from either a text file or a URL as 
+  passed into text_loc.
+  '''
+  # See if it's a local file or a URL
+  if os.path.isfile(text_loc):
+    with open(text_loc) as f:
+      while True:
+        text = f.read(num_chars)
+        if not text:
+          break
+        yield text
+  else: 
+    r = requests.get(text_loc, stream=True)
+    for text in r.iter_content(chunk_size=num_chars):
+      if text:
+        yield text
 
 def rand_string(alphabet=printable, len_min=1, len_max=6):
   length = random.randint(len_min, len_max)
@@ -155,7 +179,7 @@ class MassMailer(object):
       object built below.
       '''
       self.cp = ap.ArgumentParser( 
-          formatter_class=ap.ArgumentDefaultsHelpFormatter)
+          formatter_class=ap.RawTextHelpFormatter)
       
       # Config file
       self.cp.add_argument( '--config'
@@ -286,6 +310,27 @@ class MassMailer(object):
                           , dest='misc_chuck_norris'
                           , help='Include random Chuck Norris joke in each message'
                           )
+      self.cp.add_argument( '--text'
+                          , dest='misc_text_location'
+                          , help='Filename or URL of text to send.' + \
+                                 '\nNo other message content will be ' + \
+                                 'sent if this option is included.'
+                          )
+      self.cp.add_argument( '--chars-per-msg'
+                          , dest='misc_chars_per_msg'
+                          , type=int
+                          , default=160
+                          , help='Only used in conjunction with --text.\n' + \
+                                 'Specifies the number of characters per ' + \
+                                 'message to send from the text.'
+                          )
+      self.cp.add_argument( '--send-all-text'
+                          , dest='misc_send_all_text'
+                          , action='store_true'
+                          , help='Only used in conjunction with --text.\n' + \
+                                 'Whether to send all of the text or just\n' + \
+                                 'the quantity specified in -q/--quantity.'
+                          )
                           
       return self.cp.parse_args()
 
@@ -330,7 +375,7 @@ class MassMailer(object):
     If no attribute value is provided on the command
     line or in a config file it defaults to None.
     '''
-    if not getattr(self, name):
+    if (not hasattr(self, name)) or (not getattr(self, name)):
       setattr(self, name, None)
 
     return getattr(self, name)
@@ -350,10 +395,22 @@ class MassMailer(object):
 
     return getattr(self, name)
 
+  def getQuantity(self):
+    if self.misc_text_location and self.misc_send_all_text:
+      self.message_quantity = sys.maxint
+    return self.message_quantity
+
   def getBody(self):
     '''
     Save and return the message body.
     '''
+    # See if we need to send part of a text file
+    if self.misc_text_location:
+      if not hasattr(self, 'text_gen'):
+        self.text_gen = text_gen(self.misc_text_location, 
+                                    self.misc_chars_per_msg)
+      return next(self.text_gen)
+
     # Get the base of the message body
     if not self.message_body:
       self.getBodyBase()
@@ -363,8 +420,12 @@ class MassMailer(object):
 
     # Check if we need random content
     if self.misc_rand_content:
-      body += '\n' + ' '.join(rand_words())
+      if not getattr(self, 'words'):
+        self.words = [word.strip() for word in open('cracklib-small')]
+      rws = ' '.join(rand_words(words))
+      body += '\n' + rws.capitalize() + '.'
 
+    # See if we also want a bible quote
     if self.misc_bible_quote:
       bible_url = 'http://labs.bible.org/api/?passage=random'
       bible_url += '&formatting=plain'
@@ -372,12 +433,14 @@ class MassMailer(object):
       bible_quote = response.read()
       body += '\n' + bible_quote 
 
+    # How about a fortune
     if self.misc_fortune:
       fortune_url = 'http://www.iheartquotes.com/api/v1/random'
       response = urllib2.urlopen(fortune_url)
       fortune = response.read()
       body += '\n' + fortune
 
+    # How about some Chuck Norris
     if self.misc_chuck_norris:
       norris_url = 'http://api.icndb.com/jokes/random'
       response = urllib2.urlopen(norris_url)
@@ -427,8 +490,8 @@ class MassMailer(object):
       Send the specified quantity of e-mail messages
       '''
       # Get all required variables ready to rock
-      delay = 0.33
-      num = self.message_quantity
+      delay = self.misc_delay if hasattr(self, 'misc_delay') else 0.33
+      num = self.getQuantity()
       width = len(str(num))
       at_a_time = self.misc_at_a_time
       at_a_time = abs(at_a_time) if type(at_a_time) == int else at_a_time
@@ -439,15 +502,12 @@ class MassMailer(object):
         try:
           # Get the messages ready
           msgs = []
-          words = [word.strip() for word in open('cracklib-small')]
-          for n in range(num):
-            msgs.append(self.getMessage())
-          
-          if self.misc_rand_content:
+          try:
             for n in range(num):
-              rws = ' '.join(rand_words(words))
-              msgs[n].Body += rws.capitalize() + '.'
-
+              msgs.append(self.getMessage())
+          except StopIteration:
+            pass
+          
           # Send them all at once if at_a_time is None
           # or at_a_time is greater than quantity
           if not at_a_time or at_a_time > num:
@@ -469,10 +529,10 @@ class MassMailer(object):
         except KeyboardInterrupt:
           sys.exit('Done!')
         except:
-          # When an error occurs, print its message
-          # Then see if too many have occurred
-          # Otherwise, wait error_delay**num_errors secs
           sys.stderr.write('[Error]: {}\n'.format(sys.exc_info()[0]))
+          traceback.print_tb(sys.exc_info()[2])
+          sys.exit('Failure.')
+          
             
 if __name__ == '__main__':
     mm = MassMailer()

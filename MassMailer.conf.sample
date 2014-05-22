@@ -34,6 +34,10 @@ quantity: 1
 # the entire quantity in a single connection
 at_a_time: 
 
+# Delay between message sending
+# Only matters if not sending all messages at a time
+delay: 0.33
+
 # Whether to add random content to each message
 # If yes, a certain number of random words will
 # be pulled from an English dictionary and 
@@ -45,3 +49,14 @@ bible_quote: no
 
 # Whether to include a random UNIX fortune in each message
 fortune: no
+
+# Whether to include a random Chuck Norris joke in each message
+chuck_norris: no
+
+# Whether to send a text file, either as a URL or as a file
+# Also, how many characters from the text file to send per message
+# Lastly, whether to send the entire text or just the quantity
+# specified in the message section of the config file
+text_location: 
+chars_per_msg: 160
+send_all_text: no

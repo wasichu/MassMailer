@@ -10,7 +10,9 @@ Dependencies
 
   Python 2.7 
   
-  The excellent mailer library: https://pypi.python.org/pypi/mailer/0.7
+  mailer library: https://pypi.python.org/pypi/mailer/0.7
+
+  requests library: http://docs.python-requests.org/en/latest/
 
 How To Use
 ==========
